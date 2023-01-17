@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option csharp_namespace = "gRPC.Poc.Protos";
+
+service UsuarioProto{
+	rpc ObterUsuario(ObterUsuarioRequest) returns (ObterUsuarioResponse);
+	
+}
+
+message ObterUsuarioRequest{
+	string cpf = 1;
+}
+
+message ObterUsuarioResponse{
+	   string id = 1;
+       string Nome = 2;
+       string Cpf = 3;    
+}
