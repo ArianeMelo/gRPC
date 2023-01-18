@@ -9,37 +9,94 @@ namespace gRPC.Poc.Services.gRPC
     public class UsuarioGrpcService : UsuarioProto.UsuarioProtoBase
     {
         private IUsuarioRepository _usuarioRepository;
+        private readonly ILogger<UsuarioGrpcService> _logger;
 
-        public UsuarioGrpcService(IUsuarioRepository usuarioRepository)
+        public UsuarioGrpcService(
+            IUsuarioRepository usuarioRepository, 
+            ILogger<UsuarioGrpcService> logger)
         {
             _usuarioRepository = usuarioRepository;
+            _logger = logger;
+        }
+      
+        public override async Task<UsuarioResponse> ObterUsuario(ObterUsuarioRequest usuarioRequest, ServerCallContext context)
+        {            
+            
+                var usuario = await _usuarioRepository.ObterUsuario(usuarioRequest.Id);
+
+                if (usuario == null) 
+                    throw new RpcException(new Status(StatusCode.NotFound, "Usuario não encontrado"));                
+               
+
+                var userResponse = MapUsuarioToUsuarioResponse(usuario);
+                _logger.LogInformation("Usuário encontrado.");
+
+                return userResponse;           
+           
+        }       
+
+
+
+        public override async Task<UsuarioResponse> AdicionarUsuario(AdicionarUsuarioRequest usuarioRequest, ServerCallContext context)
+        {
+            var usuario = MapRequestToUsuario(usuarioRequest.UsuarioResponse.Id, usuarioRequest.UsuarioResponse.Nome, usuarioRequest.UsuarioResponse.Cpf);
+           
+            var result = await _usuarioRepository.AdicionarUsuario(usuario);
+
+            if (!result)           
+                return null;               
+                     
+            return usuarioRequest.UsuarioResponse;
+        }      
+
+        public override async Task<UsuarioResponse> AtualizarUsuario(AtualizarUsuarioRequest usuarioRequest, ServerCallContext context)
+        {
+            var usuario = MapRequestToUsuario(usuarioRequest.UsuarioResponse.Id, usuarioRequest.UsuarioResponse.Nome, usuarioRequest.UsuarioResponse.Cpf);
+           
+            var result = await _usuarioRepository.AtualizarUsuario(usuario);
+
+            if (!result)           
+                return null;          
+
+            return usuarioRequest.UsuarioResponse;
         }
 
-      
-        public override async Task<ObterUsuarioResponse> ObterUsuario(ObterUsuarioRequest request, ServerCallContext context)
+        public override async Task<DeletarUsuarioResponse> DeletarUsuario(DeletarUsuarioRequest usuarioRequest, ServerCallContext context)
+        {           
+            var result = await _usuarioRepository.DeletarUsuario(usuarioRequest.Id);
+
+            if (!result)
+                return null;
+            
+            var reponse = new DeletarUsuarioResponse { Success = result };          
+
+            return reponse;
+        }
+
+        private static UsuarioResponse MapUsuarioToUsuarioResponse(Usuario usuario)
         {
             
-            var registro = await _usuarioRepository.Buscar(req => req.Cpf == request.Cpf);
-
-            if (registro == null)
-                throw new RpcException(new Status(StatusCode.NotFound, "Não encontrado"));
-
-            var user = MapUsuarioToObterUsuarioResponse(registro);
-
-            return user;
-        }  
-
-        private static ObterUsuarioResponse MapUsuarioToObterUsuarioResponse(IEnumerable<Usuario> usuario)
-        {
-            var um = usuario.FirstOrDefault();
-            var user = new ObterUsuarioResponse
+           
+            var userResponse = new UsuarioResponse
             {
-                Id = um.Id,
-                Nome = um.Nome,
-                Cpf = um.Cpf,
+                Id = usuario.Id.ToString(),
+                Nome = usuario.Nome,
+                Cpf = usuario.Cpf,
             };
 
-            return user;
+            return userResponse;
+        }
+
+        private static Usuario MapRequestToUsuario(string id, string nome, string cpf)
+        {
+            var usuario = new Usuario
+            {
+                Id = Guid.Parse(id),
+                Nome = nome,
+                Cpf = cpf
+            };
+
+            return usuario;
         }
     }
 }
