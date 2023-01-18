@@ -1,6 +1,6 @@
 using gRPC.API.Services.gRPC;
 using gRPC.Poc.Protos;
-using static gRPC.API.Services.gRPC.UsuarioService;
+using static gRPC.API.Services.gRPC.UsuarioGrpcService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +10,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<IUsuarioService , UsuarioService>();  
+builder.Services.AddScoped<UsuarioGrpcService>();  
 builder.Services.AddGrpcClient<UsuarioProto.UsuarioProtoClient>(options =>
 {
     options.Address = new Uri(builder.Configuration["GrpcPoc"]);

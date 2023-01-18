@@ -10,7 +10,7 @@ namespace gRPC.Poc.Repository.Map
             ToTable("Usuarios");
             Map(cliente => cliente.Id).ToColumn("Id").IsKey();
             Map(cliente => cliente.Nome).ToColumn("Nome");
-            Map(cliente => cliente.Cpf).ToColumn("Cpf");
+            Map(cliente => cliente.Cpf).ToColumn("CPF");
 
         }
     }
